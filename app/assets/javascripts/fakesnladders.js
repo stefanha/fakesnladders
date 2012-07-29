@@ -239,10 +239,14 @@ FakesNLadders.prototype.init = function(redraw) {
     });
     
     // start player update loop
-    function playerUpdateLoop() {
-        this_.updatePlayers(redraw);
+    function playerUpdateLoop(currentUserId) {
+        return function() {
+            this_.updatePlayers(redraw, currentUserId);
+        }
     }
-    setInterval(playerUpdateLoop, 2000);
+    new GameRequest().getCurrentUser(function(currentUserId, avatarUrl, position) {
+        setInterval(playerUpdateLoop(currentUserId), 2000);
+    });
 
     this_.dice_enable = false;
     this_.dice_face = 1;
@@ -276,7 +280,7 @@ FakesNLadders.prototype.initPlayer = function(userInfo, redraw) {
     this.nextChoice();
 }
 
-FakesNLadders.prototype.updatePlayers = function(redraw) {
+FakesNLadders.prototype.updatePlayers = function(redraw, currentUserId) {
     var this_ = this;
     var request = new GameRequest();
     request.getAllUsers(function(userList) {
@@ -287,6 +291,9 @@ FakesNLadders.prototype.updatePlayers = function(redraw) {
         for(var i = 0; i < userList.length; i++) {
             var playerId = userList[i].id;
             var player = this.playerMap[playerId];
+            if (playerId == currentUserId) {
+                continue;
+            }
             
             if(player) {
                 var newSquare = userList[i].position;
