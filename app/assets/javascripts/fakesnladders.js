@@ -86,7 +86,13 @@ function Player(game, id, scoreGrid, image) {
     this.id = id;
     this.scoreGrid = scoreGrid;
     this.image = image;
-    this.rect = this.scoreGrid.rect;
+    this.rect = new Rect(this.scoreGrid.rect.x, this.scoreGrid.rect.y, this.scoreGrid.width, this.scoreGrid.height);
+}
+
+Player.prototype.reset = function() {
+    this.scoreGrid = this.game.getGrid(0);
+    this.rect = new Rect(this.scoreGrid.rect.x, this.scoreGrid.rect.y, this.scoreGrid.width, this.scoreGrid.height);
+    new GameRequest().updateUserSquare(this.id, this.scoreGrid.sqNo);
 }
 
 Player.prototype.move = function(newScoreGrid) {
@@ -385,6 +391,14 @@ FakesNLadders.prototype.makeChoice = function(choice) {
 
     this_.dice_enable = false;
     new GameRequest().checkChoice(this.cur_choice_id, choice, function(correct) {
+        function afterChoice(userId, avatarUrl, position) {
+            if (correct) {
+                this_.playerMap[userId].move(this_.getGrid(this_.playerMap[userId].scoreGrid.sqNo + this_.dice_face));
+            } else {
+                this_.playerMap[userId].reset();
+            }
+        }
+        new GameRequest().getCurrentUser(afterChoice);
         console.log('correct: ' + correct + ' dice face:' + this_.dice_face);
         this_.nextChoice();
     });
